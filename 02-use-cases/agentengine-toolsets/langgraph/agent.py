@@ -1,12 +1,6 @@
-from pathlib import Path
 import os
 import re
-import sys
 from typing import Annotated, Any, TypedDict
-
-ROOT = Path(__file__).resolve().parents[3]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from langchain_core.tools import tool
@@ -14,9 +8,24 @@ from langgraph.graph import END, START, MessagesState, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
 
-from common.model_config import make_langchain_chat_model
 from ksadk.skills.service_env import resolve_skill_service_url
 from ksadk.toolsets import describe_agentengine_tools, get_agentengine_tools
+
+
+def make_langchain_chat_model():
+    """使用项目环境变量创建模型，使本示例可独立打包部署。"""
+    from langchain_openai import ChatOpenAI
+
+    return ChatOpenAI(
+        model=os.getenv("OPENAI_MODEL_NAME") or os.getenv("MODEL_NAME") or "gpt-4o-mini",
+        base_url=(
+            os.getenv("OPENAI_BASE_URL")
+            or os.getenv("OPENAI_API_BASE")
+            or "https://api.openai.com/v1"
+        ),
+        api_key=os.getenv("OPENAI_API_KEY", ""),
+        temperature=0,
+    )
 
 
 SYSTEM_PROMPT = """你是 AgentEngine Toolsets 示例助手，用中文回答。
